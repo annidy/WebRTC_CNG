@@ -701,7 +701,7 @@ int WebRtcSpl_DivW32HiLow(int32_t num, int16_t den_hi, int16_t den_low) {
 #define SPL_LEVINSON_MAXORDER 20
 
 
-WebRtcSpl_LevinsonDurbin(const int32_t *R, int16_t *A, int16_t *K,
+int WebRtcSpl_LevinsonDurbin(const int32_t *R, int16_t *A, int16_t *K,
                          size_t order) {
     size_t i, j;
     // Auto-correlation coefficients in high precision

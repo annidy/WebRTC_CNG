@@ -112,8 +112,27 @@ int main(int argc, char *argv[]) {
                                          kForceSid, &sid_data);
         if (size == (quality + 1))
             printf("done \n");
-        wavWrite_int16("cng.wav", speech_data_, sample_rate_hz, num_samples_10ms);
+        // 静音插入描述帧(SID: a Silence Insertion Descriptor frame)
+        // 包括1字节的数据，用来描述噪音的级别，和量化后的反射系数，长度等于quality
+        // https://wdd.js.org/freeswitch/webrtc-vad-cng/
     }
+
+    ComfortNoiseDecoder cng_decoder;
+    cng_decoder.UpdateSid(sid_data);
+
+    std::vector<int16_t> pcm_output;
+    for (size_t i = 0; i < 200; ++i) {
+        // Generate每次最多生成10ms @ 64kHz
+        std::vector<int16_t> output(80); // 10ms @ 8kHz
+        if (cng_decoder.Generate(output, i == 0) == false) {
+            printf("Error: Failed to generate comfort noise.\n");
+            return -1;
+        }
+        pcm_output.insert(pcm_output.end(), output.begin(), output.end());
+    }
+
+    wavWrite_int16("cng.wav", pcm_output.data(), sample_rate_hz, pcm_output.size());
+
     printf("按任意键退出程序 \n");
     getchar();
     return 0;
